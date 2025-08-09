@@ -77,7 +77,8 @@ void calibrate_key_baselines(void) {
         }
         
         key_baselines[key] = total / samples;
-        key_thresholds[key] = key_baselines[key] * (1/4);
+        // Create a threshold that will be added on top of the normal baseline
+        key_thresholds[key] = key_baselines[key] * (1/8);
         
         // Ensure minimum threshold
         // TODO: is 20 even reasonable??
