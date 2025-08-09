@@ -107,6 +107,30 @@ let C = import "codegen/contracts.ncl" in
       #endif
   }
 
+  uint16_t measure_key_discharge_time(GPIO_TypeDef* port, uint16_t pin) {
+    uint16_t discharge_time = 0;
+    
+    // 1. Charge the capacitor by setting pin as output high
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.GPIO_Pin = pin;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(port, &GPIO_InitStructure);
+    GPIO_SetBits(port, pin);
+    Delay_Us(10); // Charge time
+    
+    // 2. Switch to input and measure discharge time
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(port, &GPIO_InitStructure);
+    
+    // 3. Count time until pin reads low
+    while (GPIO_ReadInputDataBit(port, pin) && discharge_time < 1000) {
+        discharge_time++;
+        Delay_Us(1);
+    }
+    
+    return discharge_time;
+  }
+
   %{keyboard_matrix_scan board.matrix}
   "%,
 }

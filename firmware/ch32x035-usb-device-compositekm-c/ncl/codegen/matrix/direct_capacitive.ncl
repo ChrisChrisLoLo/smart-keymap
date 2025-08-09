@@ -81,8 +81,7 @@ let C = import "codegen/contracts.ncl" in
       "%,
 
         is_sw_1_1_pressed =
-          let row = std.array.at 0 board.matrix.rows in
-          let col = std.array.at 0 board.matrix.cols in
+          let key = std.array.at 0 board.matrix.keys in
           m%"
         GPIO_ResetBits(GPIO%{row.port}, GPIO_Pin_%{std.to_string row.pin}); // row 0
         Delay_Us(5);

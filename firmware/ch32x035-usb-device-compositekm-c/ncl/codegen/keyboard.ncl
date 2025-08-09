@@ -73,6 +73,11 @@ let C = import "contracts.ncl" in
       NVIC_SystemReset();
   }
 
+  // hardcoding array like a boss
+  // TODO: dynamically generate the size of this if there's a capacitive matric set
+  #define KEY_COUNT 9
+  static uint16_t key_baselines[KEY_COUNT]; 
+
   void keyboard_init(void) {
       keyboard_matrix_init();
 
