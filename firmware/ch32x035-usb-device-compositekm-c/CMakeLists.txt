@@ -18,7 +18,7 @@ target_include_directories(usb-device-compositekm PUBLIC User)
 
 enable_language(C ASM)
 
-add_subdirectory(generated)
+add_subdirectory(generated_hardcoded)
 target_link_libraries(usb-device-compositekm keyboard_codegen)
 
 add_subdirectory(sdk sdk)

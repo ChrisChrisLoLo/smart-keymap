@@ -11,7 +11,9 @@
 #include "keyboard_split.h"
 #endif
 
-#define KEY_COUNT 48
+// Similar to https://github.com/adafruit/circuitpython/blob/main/shared-bindings/touchio/TouchIn.c at a high level
+
+#define KEY_COUNT 9
 
 // Capacitive sensing state
 static uint16_t key_baselines[KEY_COUNT];
@@ -26,54 +28,15 @@ typedef struct {
 
 // All key pins mapped to their physical locations
 static const key_pin_t key_pins[KEY_COUNT] = {
-    { GPIOA, GPIO_Pin_4 },   // Key 0
-    { GPIOA, GPIO_Pin_1 },   // Key 1
-    { GPIOC, GPIO_Pin_19 },  // Key 2
-    { GPIOC, GPIO_Pin_18 },  // Key 3
-    { GPIOA, GPIO_Pin_3 },   // Key 4
-    { GPIOA, GPIO_Pin_7 },   // Key 5
-    { GPIOA, GPIO_Pin_2 },   // Key 6
-    { GPIOA, GPIO_Pin_4 },   // Key 7
-    { GPIOA, GPIO_Pin_1 },   // Key 8
-    { GPIOC, GPIO_Pin_19 },  // Key 9
-    { GPIOC, GPIO_Pin_18 },  // Key 10
-    { GPIOA, GPIO_Pin_3 },   // Key 11
-    { GPIOC, GPIO_Pin_19 },  // Key 12
-    { GPIOC, GPIO_Pin_18 },  // Key 13
-    { GPIOA, GPIO_Pin_3 },   // Key 14
-    { GPIOA, GPIO_Pin_7 },   // Key 15
-    { GPIOA, GPIO_Pin_2 },   // Key 16
-    { GPIOA, GPIO_Pin_4 },   // Key 17
-    { GPIOA, GPIO_Pin_1 },   // Key 18
-    { GPIOC, GPIO_Pin_19 },  // Key 19
-    { GPIOC, GPIO_Pin_18 },  // Key 20
-    { GPIOA, GPIO_Pin_3 },   // Key 21
-    { GPIOA, GPIO_Pin_7 },   // Key 22
-    { GPIOA, GPIO_Pin_2 },   // Key 23
-    { GPIOA, GPIO_Pin_3 },   // Key 24
-    { GPIOA, GPIO_Pin_7 },   // Key 25
-    { GPIOA, GPIO_Pin_2 },   // Key 26
-    { GPIOA, GPIO_Pin_4 },   // Key 27
-    { GPIOA, GPIO_Pin_1 },   // Key 28
-    { GPIOC, GPIO_Pin_19 },  // Key 29
-    { GPIOC, GPIO_Pin_18 },  // Key 30
-    { GPIOA, GPIO_Pin_3 },   // Key 31
-    { GPIOA, GPIO_Pin_7 },   // Key 32
-    { GPIOA, GPIO_Pin_2 },   // Key 33
-    { GPIOA, GPIO_Pin_4 },   // Key 34
-    { GPIOA, GPIO_Pin_1 },   // Key 35
-    { GPIOA, GPIO_Pin_2 },   // Key 36
-    { GPIOA, GPIO_Pin_4 },   // Key 37
-    { GPIOA, GPIO_Pin_1 },   // Key 38
-    { GPIOC, GPIO_Pin_19 },  // Key 39
-    { GPIOC, GPIO_Pin_18 },  // Key 40
-    { GPIOA, GPIO_Pin_3 },   // Key 41
-    { GPIOA, GPIO_Pin_7 },   // Key 42
-    { GPIOA, GPIO_Pin_2 },   // Key 43
-    { GPIOA, GPIO_Pin_4 },   // Key 44
-    { GPIOA, GPIO_Pin_1 },   // Key 45
-    { GPIOC, GPIO_Pin_19 },  // Key 46
-    { GPIOC, GPIO_Pin_18 }   // Key 47
+    { GPIOA, GPIO_Pin_10 },   // Key 0
+    { GPIOA, GPIO_Pin_11 },   // Key 1
+    { GPIOA, GPIO_Pin_0 },    // Key 2
+    { GPIOC, GPIO_Pin_3 },    // Key 3
+    { GPIOA, GPIO_Pin_2 },    // Key 4
+    { GPIOA, GPIO_Pin_1 },    // Key 5
+    { GPIOA, GPIO_Pin_4 },    // Key 6
+    { GPIOA, GPIO_Pin_3 },    // Key 7
+    { GPIOA, GPIO_Pin_5 },    // Key 8
 };
 
 uint16_t measure_key_discharge_time(GPIO_TypeDef* port, uint16_t pin) {
@@ -114,10 +77,10 @@ void calibrate_key_baselines(void) {
         }
         
         key_baselines[key] = total / samples;
-        // Set threshold to 30% reduction from baseline
-        key_thresholds[key] = key_baselines[key] * 3 / 10;
+        key_thresholds[key] = key_baselines[key] * (1/4);
         
         // Ensure minimum threshold
+        // TODO: is 20 even reasonable??
         if (key_thresholds[key] < 20) {
             key_thresholds[key] = 20;
         }
@@ -170,7 +133,8 @@ void keyboard_matrix_scan_raw(bool scan_buf[KEY_COUNT]) {
     static uint32_t scan_counter = 0;
     scan_counter++;
     
-    if (!baselines_calibrated || (scan_counter % 10000 == 0)) {
+    // if (!baselines_calibrated || (scan_counter % 10000 == 0)) {
+    if (!baselines_calibrated) {
         calibrate_key_baselines();
     }
     
@@ -178,8 +142,9 @@ void keyboard_matrix_scan_raw(bool scan_buf[KEY_COUNT]) {
     for (int i = 0; i < KEY_COUNT; i++) {
         uint16_t discharge_time = measure_key_discharge_time(key_pins[i].port, key_pins[i].pin);
         
-        // Key is pressed if discharge time is significantly faster than baseline
-        scan_buf[i] = (discharge_time < (key_baselines[i] - key_thresholds[i]));
+        // Key is pressed if discharge time is significantly slower than baseline
+        // (finger adds capacitance, making discharge take longer)
+        scan_buf[i] = (discharge_time > (key_baselines[i] + key_thresholds[i]));
     }
 }
 
