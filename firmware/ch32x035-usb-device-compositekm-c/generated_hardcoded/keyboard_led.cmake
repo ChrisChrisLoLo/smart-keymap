@@ -1,0 +1,2 @@
+target_compile_definitions(keyboard_codegen INTERFACE KEYBOARD_LED_ENABLED)
+target_sources(keyboard_codegen INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/keyboard_led.c)

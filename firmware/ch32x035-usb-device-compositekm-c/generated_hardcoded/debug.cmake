@@ -1,0 +1,1 @@
+target_compile_definitions(keyboard_codegen INTERFACE DEBUG=2)

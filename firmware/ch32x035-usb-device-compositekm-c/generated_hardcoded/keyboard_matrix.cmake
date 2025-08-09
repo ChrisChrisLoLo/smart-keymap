@@ -1,0 +1,1 @@
+target_sources(keyboard_codegen INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/keyboard_matrix.c)
