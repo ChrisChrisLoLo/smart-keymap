@@ -78,12 +78,15 @@ void calibrate_key_baselines(void) {
         
         key_baselines[key] = total / samples;
         // Create a threshold that will be added on top of the normal baseline
-        key_thresholds[key] = key_baselines[key] * (1/8);
+        // This number will need to be tuned based on pcb design. 
+        // Too low and hovering your finger will set it of, too high and
+        // light taps won't register
+        key_thresholds[key] = key_baselines[key] * (1/4);
         
-        // Ensure minimum threshold
+        // Ensure minimum threshold. This value is probably more useful than the number above
         // TODO: is 20 even reasonable??
-        if (key_thresholds[key] < 20) {
-            key_thresholds[key] = 20;
+        if (key_thresholds[key] < 7) {
+            key_thresholds[key] = 7;
         }
     }
     baselines_calibrated = true;
